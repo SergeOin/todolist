@@ -1,64 +1,49 @@
 <template>
   <div id="app">
-    <form class="mb-3">
-      <label>Créer un Post It</label>
-      <div class="d-flex justify-content-center">
-        <input class="form-control mr-2" style="width: 35%;" type="text" name="postit" v-model="newPost">
-        <input class="btn btn-outline-success" type="submit" value="Créer" @click="addPost">
-      </div>
+    <form @submit.prevent="createPost">
+      <input placeholder="name" v-model="post.name">
+      <input placeholder="title" v-model="post.title">
+      <br>
+      <button type="submit">Create</button>
     </form>
-    <div class="card-columns w-75 mt-3 mx-auto">
-      <div v-for="post in postits" :key="post" class="card" style="width: 18rem;">
-        <div class="card-header bg-transparent border-0">
-          <h5 class="card-title">{{ post }}</h5>
-        </div>
-        <div class="card-footer bg-transparent border-0">
-          <a class="btn btn-outline-danger mr-2" @click="deletePost(post)">Supprimer</a>
-        </div>
-      </div>
-    </div>
+    {{data}}
   </div>
 </template>
-
 <script>
-export default  {
-  el: '#app',
+export default {
+  name: "#app",
   data() {
     return {
-      postits: [],
-      newPost: null
-    }
-  },
-  mounted() {
-    if (localStorage.getItem('postits')) {
-      try {
-        this.postits = JSON.parse(localStorage.getItem('postits'));
-      } catch (e) {
-        localStorage.removeItem('postits');
-      }
-    }
+      post: {
+        name: "",
+        title: ""
+      },
+      data: {}
+    };
   },
   methods: {
-    addPost() {
-      // s'assurer que l'utilisateur a entré quelque chose
-      if (!this.newPost) {
-        return;
-      }
-
-      this.postits.push(this.newPost);
-      this.newPost = '';
-      this.savePosts();
-    },
-    deletePost(post) {
-      this.postits.splice(post, 1);
-      this.savePosts();
-    },
-    savePosts() {
-      const parsed = JSON.stringify(this.postits);
-      localStorage.setItem('postits', parsed);
+      utf8_to_b64( str ) {
+        return window.btoa(unescape(encodeURIComponent( str )))
+      },
+    async createPost() {
+      let headers = new Headers()
+      headers.set('Authorization', 'Basic ' + this.utf8_to_b64("pierre" + ":" + "azerty"))
+      const request = new Request(
+          "http://localhost/vuewp/wp-json/wp/v2/posts",
+          {
+            method: "POST",
+            mode: "cors",
+            cache: "default",
+            headers: headers,
+            body: JSON.stringify(this.post)
+          }
+      );
+      const res = await fetch(request);
+      const data = await res.json();
+      this.data = data;
     }
   }
-}
+};
 </script>
 
 <style>
